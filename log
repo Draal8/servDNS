@@ -1,0 +1,13 @@
+=========== Test ./test1.sh
+Sortie d'erreur standard vide
+Syntaxe invalide : pas d'argument
+Sortie d'erreur standard vide
+Syntaxe invalide : trop d'arguments
+Sortie d'erreur standard vide
+Motif d'entree trop court
+Sortie d'erreur standard vide
+Motif d'entree trop long
+Sortie d'erreur standard vide
+Syntaxe invalide 1
+Sortie d'erreur standard vide
+Syntaxe invalide 2
