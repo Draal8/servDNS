@@ -28,6 +28,6 @@ else
 	fi
 fi
 
-clean_tmp
+clean_tmp()
 return $TEST_CRASH
 

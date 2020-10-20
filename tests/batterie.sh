@@ -48,5 +48,5 @@ do
 		RETURN=$(($RETURN+1))
     fi
 done
+exit $RETURN
 
-return $RETURN

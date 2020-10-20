@@ -27,6 +27,7 @@ noreturn void rerror(char *str) {
 // ./recv 3500
 
 int main(int argc, char *argv[]) {
+	if (argc != 2) rerror("bad number of arguments");
 	int sockfd;
 	char buff[1024];
 	socklen_t addrlen;

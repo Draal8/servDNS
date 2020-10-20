@@ -28,6 +28,7 @@ noreturn void rerror(char *str) {
 // l'adresse peut-etre passee avec des "" ou sans
 
 int main(int argc, char *argv[]) {
+	if (argc != 4) rerror("bad number of arguments");
 	int sockfd;
 	socklen_t addrlen;
 	struct sockaddr_in dest;
