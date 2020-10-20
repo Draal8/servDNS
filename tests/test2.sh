@@ -1,13 +1,14 @@
 #!/bin/sh
 
-if [ $# -ne 2 ]
+if [ $# -ne 3 ]
 then
-    echo "usage: $0 <testdir> <program-to-test>" >&2
+    echo "usage: $0 <testdir> <program-to-test> <server-to-test>" >&2
     exit 1
 fi
 
 TESTDIR="$1"
 PROG="$2"
+SERV="$3"
 TMP_SS="tmp_sortie"
 TMP_ER="tmp"
 TEST_CRASH=0

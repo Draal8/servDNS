@@ -24,7 +24,9 @@ SRCDIR="$2"
 # même répertoire que le source C.
 
 LOG="$SRCDIR/log"
-PROG="$SRCDIR/resolvDNS"
+PROG="$SRCDIR/sender"
+SERV="$SRCDIR/recv"
+RETURN=0
 rm -f "$LOG"
 
 for TEST in $(ls "$TESTDIR"/test*.sh)
@@ -38,11 +40,13 @@ do
     #'>>' append alors que '>' trunc et & permet de dire que c'est
     #un descripteur de fichier apres '>' seulemement
     #if test le retour du test
-    if sh "$TEST" "$TESTDIR" "$PROG" >> "$LOG" 2>&1
+    if sh "$TEST" "$TESTDIR" "$PROG" "$SERV" >> "$LOG" 2>&1
     then
 		printf "Test $NUMTEST OK\n\n"
     else
 		printf "Test $NUMTEST FAIL\n\n"
+		RETURN=$(($RETURN+1))
     fi
 done
 
+return $RETURN

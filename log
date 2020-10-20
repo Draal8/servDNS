@@ -1,13 +1,10 @@
-=========== Test ./test1.sh
-Sortie d'erreur standard vide
+=========== Test tests/test1.sh
 Syntaxe invalide : pas d'argument
-Sortie d'erreur standard vide
 Syntaxe invalide : trop d'arguments
-Sortie d'erreur standard vide
 Motif d'entree trop court
-Sortie d'erreur standard vide
 Motif d'entree trop long
-Sortie d'erreur standard vide
 Syntaxe invalide 1
-Sortie d'erreur standard vide
 Syntaxe invalide 2
+=========== Test tests/test2.sh
+tests/test2.sh: 19: [: Illegal number: 127.0.0.0
+test moodle

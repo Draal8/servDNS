@@ -30,7 +30,7 @@ else
 endif
 
 ###### FILES ######
-EXEC = $(BINPATH)/resolvDNS
+EXEC = $(BINPATH)/sender
 
 SRC  = $(wildcard $(SRCPATH)/*.c)
 HEAD = $(wildcard $(HEADPATH)/*.h)
@@ -41,8 +41,10 @@ DIST = $(SRC) $(HEAD) Makefile Doxyfile
 all: $(EXEC)
 	@echo "\nExécutable généré en mode"$(TEXTE)"."
 	
-$(EXEC): $(OBJPATH)/main.o
-	$(CC) $(CPPFLAGS) -o $@ $^ $(CFLAGS) $(LDLIBS)
+$(EXEC): $(OBJPATH)/sender.o
+	$(CC) $(CPPFLAGS) sender.o -o $@ $(CFLAGS) $(LDLIBS)
+	$(CC) $(CPPFLAGS) recv.o -o recv $(CFLAGS) $(LDLIBS)
+	
 	@echo "\n----Rule " $@ "----"
 
 $(OBJPATH)/%.o: $(SRCPATH)/%.c
@@ -50,7 +52,7 @@ $(OBJPATH)/%.o: $(SRCPATH)/%.c
 	@echo "\n----Rule " $@ "----"
 
 test:
-	bash batterie.sh
+	bash tests/batterie.sh tests .
 
 clean:
 	rm -rf $(OBJPATH)/*.o

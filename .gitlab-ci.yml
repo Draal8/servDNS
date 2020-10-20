@@ -1,0 +1,22 @@
+before_script:
+	- "apt-get update"
+	- "apt-get upgrade -y"
+	- "apt-get install -y git autoconf autoconf-archive gcc build-essential gdb valgrind"
+
+stages:
+	- build
+	- tests
+
+build:
+	stage: build
+	script:
+		- 'make'
+
+execution_test:
+	stage: tests
+	script:
+	- 'make test'
+
+only:
+	-master
+
