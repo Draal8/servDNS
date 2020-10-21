@@ -16,11 +16,11 @@ TMP_SER="tmpServ"
 TEST_CRASH=0
 . "$TESTDIR"/biblio.sh
 
-ERROR_STR="test retour existant"
+ERROR_STR="test retour correspondant"
 $SERV 1> $TMP_SSS 2> $TMP_SER &
 sleep 0.1
 $PROG "moodle3.unistra.fr" 1> $TMP_SS 2> $TMP_ER
-if [ (wc $TMP_SS == 0) || (wc $TMP_SSS == 0) ]
+if [ ! cmp $TMP_SS $TMP_SSS ]
 then
 	echo $ERROR_STR
 	TEST_CRASH=$((TEST_CRASH + 1))

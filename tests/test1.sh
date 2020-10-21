@@ -13,11 +13,12 @@ TMP="tmp"
 TEST_CRASH=0
 . "$TESTDIR"/biblio.sh
 
-ERROR_STR="Syntaxe invalide : pas d'argument"
+ERROR_STR="Client | Syntaxe invalide : pas d'argument"
 $PROG 2> $TMP
 if [ ! $? ]
 then
 	echo $ERROR_STR
+	TEST_CRASH=$((TEST_CRASH + 1))
 else
 	test_rerror $TMP
 	if [ $? ]
@@ -27,11 +28,12 @@ else
 	fi
 fi
 
-ERROR_STR="Syntaxe invalide : trop d'arguments"
-$PROG "moodle3.unistra.fr" b 2> $TMP
+ERROR_STR="Client | Syntaxe invalide : trop d'arguments"
+$PROG "moodle3.unistra.fr" b  2> $TMP
 if [ ! $? ]
 then
 	echo $ERROR_STR
+	TEST_CRASH=$((TEST_CRASH + 1))
 else
 	test_rerror $TMP
 	if [ $? ]
@@ -41,11 +43,28 @@ else
 	fi
 fi
 
-ERROR_STR="Motif d'entree trop court"
+ERROR_STR="Serveur | Syntaxe invalide : trop d'arguments"
+$PROG "moodle3.unistra.fr" 2> $TMP
+if [ ! $? ]
+then
+	echo $ERROR_STR
+	TEST_CRASH=$((TEST_CRASH + 1))
+else
+	test_rerror $TMP
+	if [ $? ]
+	then
+		echo $ERROR_STR
+		TEST_CRASH=$((TEST_CRASH + 1))
+	fi
+fi
+
+
+ERROR_STR="Client | Motif d'entree trop court"
 $PROG "m" 2> $TMP
 if [ ! $? ]
 then
 	echo $ERROR_STR
+	TEST_CRASH=$((TEST_CRASH + 1))
 else
 	test_rerror $TMP
 	if [ $? ]
@@ -55,11 +74,12 @@ else
 	fi
 fi
 
-ERROR_STR="Motif d'entree trop long"
+ERROR_STR="Client | Motif d'entree trop long"
 $PROG "moodle3moodle3moodle3moodle3moodle3moodle3moodle3moodle3moodle3moodle3moodle3moodle3moodle3moodle3moodle3moodle3.unistra.fr" 2> $TMP
 if [ ! $? ]
 then
 	echo $ERROR_STR
+	TEST_CRASH=$((TEST_CRASH + 1))
 else
 	test_rerror $TMP
 	if [ $? ]
@@ -69,12 +89,12 @@ else
 	fi
 fi
 
-
-ERROR_STR="Syntaxe invalide 1"
+ERROR_STR="Client | Syntaxe invalide 1"
 $PROG "moodle3.unistra.fr.com" 2> $TMP
 if [ ! $? ]
 then
 	echo $ERROR_STR
+	TEST_CRASH=$((TEST_CRASH + 1))
 else
 	test_rerror $TMP
 	if [ $? ]
@@ -84,11 +104,12 @@ else
 	fi
 fi
 
-ERROR_STR="Syntaxe invalide 2"
+ERROR_STR="Client | Syntaxe invalide 2"
 $PROG "moodle3.unistra" 2> $TMP
 if [ ! $? ]
 then
 	echo $ERROR_STR
+	TEST_CRASH=$((TEST_CRASH + 1))
 else
 	test_rerror $TMP
 	if [ $? ]
