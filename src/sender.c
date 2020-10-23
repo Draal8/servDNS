@@ -12,6 +12,8 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 
+void arg_check(int argc, char *argv[]);
+
 #define CHECK(op) do { if (op == -1) rerror(#op);} while(0)
 
 noreturn void rerror(char *str) {
@@ -33,12 +35,21 @@ int main(int argc, char *argv[]) {
 	socklen_t addrlen;
 	struct sockaddr_in dest;
 	
-	sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	CHECK((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)));
 	dest.sin_family = AF_INET;
 	dest.sin_port = htons(atoi(argv[2]));
 	addrlen = sizeof(struct sockaddr_in);
-	inet_pton(AF_INET, argv[1], &dest.sin_addr);
-	sendto(sockfd, argv[3], strlen(argv[3]), 0, (struct sockaddr *) &dest, addrlen);
+	CHECK(inet_pton(AF_INET, argv[1], &dest.sin_addr));
+	CHECK(sendto(sockfd, argv[3], strlen(argv[3]), 0, (struct sockaddr *) &dest, addrlen));
 	
     return 0;
 }
+
+/*void arg_check(int argc, char *argv[]) {
+	if (argc != 4) rerror("bad number of arguments");
+	int i, nbPoints = 0, end = strlen(argv[i]);
+	for (i = 0; i < end; i++) {
+		if (argv[i] == '.') nbPoints++;
+	}
+	if (i == end) rerror("not an adress");
+}*/

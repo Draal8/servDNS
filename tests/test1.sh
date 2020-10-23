@@ -43,20 +43,20 @@ else
 	fi
 fi
 
-ERROR_STR="Serveur | Syntaxe invalide : trop d'arguments"
-$PROG "moodle3.unistra.fr" 2> $TMP
-if [ ! $? ]
-then
-	echo $ERROR_STR
-	TEST_CRASH=$((TEST_CRASH + 1))
-else
-	test_rerror $TMP
-	if [ $? ]
-	then
-		echo $ERROR_STR
-		TEST_CRASH=$((TEST_CRASH + 1))
-	fi
-fi
+#ERROR_STR="Serveur | Syntaxe invalide : trop d'arguments"
+#$PROG "moodle3.unistra.fr" 2> $TMP
+#if [ ! $? ]
+#then
+#	echo $ERROR_STR
+#	TEST_CRASH=$((TEST_CRASH + 1))
+#else
+#	test_rerror $TMP
+#	if [ $? ]
+#	then
+#		echo $ERROR_STR
+#		TEST_CRASH=$((TEST_CRASH + 1))
+#	fi
+#fi
 
 
 ERROR_STR="Client | Motif d'entree trop court"

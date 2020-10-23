@@ -24,3 +24,4 @@ noreturn void rerror(char *str) {
 int main(int argc, char *argv[]) {
     return 0;
 }
+

@@ -18,7 +18,7 @@ DEBUG  = YES
 
 ifeq ($(DEBUG),YES)
 	CPPFLAGS +=
-	CFLAGS   +=-Wall -Wextra -Werror -g -pedantic -ansi -std=c11
+	CFLAGS   +=-Wall -Wextra -g -pedantic -ansi -std=c11
 	LDLIBS   +=
 	TEXTE 	 +=" debug"
 
