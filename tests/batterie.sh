@@ -25,7 +25,7 @@ SRCDIR="$2"
 
 LOG="$SRCDIR/log"
 PROG="$SRCDIR/sender"
-SERV="$SRCDIR/recv"
+SERV="$SRCDIR/recver"
 RETURN=0
 rm -f "$LOG"
 

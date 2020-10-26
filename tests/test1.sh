@@ -20,8 +20,7 @@ then
 	echo $ERROR_STR
 	TEST_CRASH=$((TEST_CRASH + 1))
 else
-	test_rerror $TMP
-	if [ $? ]
+	if [ $(test_rerror $TMP) ]
 	then
 		echo $ERROR_STR
 		TEST_CRASH=$((TEST_CRASH + 1))
@@ -35,8 +34,7 @@ then
 	echo $ERROR_STR
 	TEST_CRASH=$((TEST_CRASH + 1))
 else
-	test_rerror $TMP
-	if [ $? ]
+	if [ $(test_rerror $TMP) ]
 	then
 		echo $ERROR_STR
 		TEST_CRASH=$((TEST_CRASH + 1))
@@ -66,8 +64,7 @@ then
 	echo $ERROR_STR
 	TEST_CRASH=$((TEST_CRASH + 1))
 else
-	test_rerror $TMP
-	if [ $? ]
+	if [ $(test_rerror $TMP) ]
 	then
 		echo $ERROR_STR
 		TEST_CRASH=$((TEST_CRASH + 1))
@@ -81,8 +78,7 @@ then
 	echo $ERROR_STR
 	TEST_CRASH=$((TEST_CRASH + 1))
 else
-	test_rerror $TMP
-	if [ $? ]
+	if [ $(test_rerror $TMP) ]
 	then
 		echo $ERROR_STR
 		TEST_CRASH=$((TEST_CRASH + 1))
@@ -96,8 +92,7 @@ then
 	echo $ERROR_STR
 	TEST_CRASH=$((TEST_CRASH + 1))
 else
-	test_rerror $TMP
-	if [ $? ]
+	if [ $(test_rerror $TMP) ]
 	then
 		echo $ERROR_STR
 		TEST_CRASH=$((TEST_CRASH + 1))
@@ -111,14 +106,14 @@ then
 	echo $ERROR_STR
 	TEST_CRASH=$((TEST_CRASH + 1))
 else
-	test_rerror $TMP
-	if [ $? ]
+	if [ $(test_rerror $TMP) ]
 	then
 		echo $ERROR_STR
 		TEST_CRASH=$((TEST_CRASH + 1))
 	fi
 fi
 
-clean_tmp()
+echo " "
+clean_tmp
 return $TEST_CRASH
 

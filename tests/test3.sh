@@ -19,14 +19,20 @@ TEST_CRASH=0
 ERROR_STR="test retour correspondant"
 $SERV 1> $TMP_SSS 2> $TMP_SER &
 sleep 0.1
-$PROG "moodle3.unistra.fr" 1> $TMP_SS 2> $TMP_ER
-if [ ! cmp $TMP_SS $TMP_SSS ]
+$PROG "test.eu" 1> /dev/null 2> $TMP_ER
+$PROG "test.com" 1> /dev/null 2> $TMP_ER
+$PROG "test.fr" 1> /dev/null 2> $TMP_ER
+$PROG "test.net" 1> /dev/null 2> $TMP_ER
+$PROG "test.org" 1> /dev/null 2> $TMP_ER
+sleep 0.1
+kill -INT $!
+if [ ! cmp tests/dataCheck/checkt3 $TMP_SSS ]
 then
 	echo $ERROR_STR
 	TEST_CRASH=$((TEST_CRASH + 1))
 else
-	test_rerror $TMP_ER
-	if [ $? ]
+	
+	if [ $(test_rerror $TMP_ER) ]
 	then
 		echo $ERROR_STR
 		TEST_CRASH=$((TEST_CRASH + 1))
