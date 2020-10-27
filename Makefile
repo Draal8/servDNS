@@ -18,13 +18,13 @@ DEBUG  = YES
 
 ifeq ($(DEBUG),YES)
 	CPPFLAGS +=
-	CFLAGS   +=-Wall -Wextra -g -pedantic -ansi -std=c11
+	CFLAGS   +=-Wall -Wextra -g -pedantic -ansi -std=gnu11
 	LDLIBS   +=
 	TEXTE 	 +=" debug"
 
 else
 	CPPFLAGS +=
-	CFLAGS   +=-O2 -pedantic -ansi -std=c11
+	CFLAGS   +=-O2 -pedantic -ansi -std=gnu11
 	LDLIBS   +=
 	TEXTE 	 +=" release"
 endif

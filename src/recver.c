@@ -20,6 +20,7 @@ void domaine_create(char *racine, char *addr, int port);
 char *resolution(char *buff);
 void tab_null();
 int search_domain(char *str);
+void send_back(char *ret_adrs, char *message);
 
 #define STR_SIZE 2048
 #define CHECK(op) do { if (op == -1) rerror(#op);} while(0)
@@ -45,7 +46,7 @@ int lport = 3500;	//entre 1024 et 5000
 
 int main() {
 	int sockfd;
-	char buff[STR_SIZE];
+	char buff[STR_SIZE], ret_adrs[STR_SIZE];
 	socklen_t addrlen;
 	struct sockaddr_in my_addr;
 	struct sockaddr_in client;
@@ -64,10 +65,13 @@ int main() {
 		memset(buff, '\0',STR_SIZE);
 		
 		CHECK(recvfrom(sockfd, buff, STR_SIZE, 0, (struct sockaddr *) &client, &addrlen));	//en faire un thread ou un processus pour continuer a écouter meme si on est en plein traitement voire faire plusieurs ecoutes simultanement
+		CHECK(recvfrom(sockfd, ret_adrs, STR_SIZE, 0, (struct sockaddr *) &client, &addrlen));	//on récupère l'adresse de retour
+		//faire une fonction qui check si buff et ret_adrs sont corrects
 		
 		if((msg = resolution(buff)) == NULL); //renvoyer un message d'erreur
 		else {
-			printf("%s\n", msg); 
+			printf("%s\n", msg);
+			send_back(ret_adrs, msg);
 			free(msg);
 		}
 	}
@@ -104,6 +108,27 @@ int search_domain(char *str) {
 	while (i < 50 && dom_tab[i] != NULL && strcmp(str, dom_tab[i]->racine)) { i++; }
 	if (i < 50 && dom_tab[i] != NULL && !strcmp(str, dom_tab[i]->racine)) { return i; }
 	return -1;
+}
+
+void send_back(char *ret_adrs, char *message) {
+	char *adrs, *port, *saveptr, str[STR_SIZE];
+	int sockfd;
+	socklen_t addrlen;
+	struct sockaddr_in dest;
+	
+	strcpy(str, ret_adrs);
+	adrs = strtok_r(str, " | ", &saveptr);
+	port = strtok_r(NULL, " | ", &saveptr);
+	printf("adrs : %s\n", adrs);
+	printf("port : %s\n", port);
+	
+	CHECK((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)));
+	dest.sin_family = AF_INET;
+	dest.sin_port = htons(atoi(port));
+	addrlen = sizeof(struct sockaddr_in);
+	CHECK(inet_pton(AF_INET, adrs, &dest.sin_addr));
+	CHECK(sendto(sockfd, message, strlen(message), 0, (struct sockaddr *) &dest, addrlen));
+	
 }
 
 void domtab_create() {
