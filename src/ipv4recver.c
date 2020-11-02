@@ -20,6 +20,7 @@ void domaine_create(char *racine, char *addr, int port);
 char *resolution(char *buff);
 void tab_null();
 int search_domain(char *str);
+void send_back(struct sockaddr_in client, char *message);
 
 #define STR_SIZE 2048
 #define CHECK(op) do { if (op == -1) rerror(#op);} while(0)
@@ -67,7 +68,8 @@ int main() {
 		
 		if((msg = resolution(buff)) == NULL); //renvoyer un message d'erreur
 		else {
-			printf("%s\n", msg); 
+			printf("%s\n", msg);
+			send_back(client, msg);
 			free(msg);
 		}
 	}
@@ -97,6 +99,26 @@ char *resolution(char *buff) {
 	sprintf(temp, "%d", dom_tab[id]->port);
 	strcat(address, temp);
 	return address;
+}
+
+void send_back(struct sockaddr_in client, char *message) {
+	int sockfd;
+	socklen_t addrlen;
+	//struct sockaddr_in dest;
+	
+	/*strcpy(str, ret_adrs);
+	adrs = strtok_r(str, " | ", &saveptr);
+	port = strtok_r(NULL, " | ", &saveptr);*/
+	
+	CHECK((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)));
+	//dest.sin_family = AF_INET;
+	//dest.sin_port = htons(atoi(port));
+	addrlen = sizeof(struct sockaddr_in);
+	//CHECK(inet_pton(AF_INET, adrs, &dest.sin_addr));
+	CHECK(sendto(sockfd, message, strlen(message), 0, (struct sockaddr *) &client, addrlen));
+	printf("IP address is: %s\n", inet_ntoa(client.sin_addr));
+	printf("port is: %d\n", (int) ntohs(client.sin_port));
+	
 }
 
 int search_domain(char *str) {
