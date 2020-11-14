@@ -17,11 +17,12 @@ noreturn void usage(char *str);
 void arg_check(int argc, char *argv[]);
 
 int sender(char *site, char *buff);
-int suite(int sockfd, char *buff, char *site, struct sockaddr_in6 *dest,
+int suite(int sockfd, char *old_buff, char *site, struct sockaddr_in6 *dest,
 	struct sockaddr_in6 *retour);
 char *msg_builder(char *site);
 char *parcours_serv_racine(FILE *fd);
 void call_register_time(char *buff, char *serveur);
+int atteint(char *buff, char *site);
 
 #endif
 

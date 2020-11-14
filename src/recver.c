@@ -2,6 +2,8 @@
 
 // ./recver 3500 bddserv1 1
 
+long int delai;
+
 int main(int argc, char *argv[]) {
 	arg_check(argc, argv);
 	serv_type = atoi(argv[3]);
@@ -62,11 +64,11 @@ int resolution(char *search_file, char *buff, int sockfd, struct sockaddr_in6 cl
 	free(line);
 	
 	if (message[0] == '\0') {
-		if (msg_builder(&message, buff, "-1|", NULL) == -1) rerror("msg builder");
+		if (msg_builder(&message, buff, "-1", NULL) == -1) rerror("msg builder");
 	}
 	
 	printf("repondu : %s\n", message);
-	message[strlen(message)-1] = '\0';
+	msleep(delai);
 	CHECK_NOER(sendto(sockfd, message, strlen(message)+1, 0, (struct sockaddr *) &client, sizeof(struct sockaddr_in6)), -1);
 	
 	free(message);
@@ -86,7 +88,8 @@ int msg_builder(char **old, char *recu, char *code, char *line) {
 		racine = strtok_r(line_cpy, " | ", &saveptr);
 		address = strtok_r(NULL, " | ", &saveptr);
 		port = strtok_r(NULL, " | ", &saveptr);
-	
+		if (port[strlen(port)-1] == '\n') port[strlen(port)-1] = '\0';
+		
 		if (*old[0] == '\0') {
 			rt = snprintf(*old, STR_SIZE, "%s |%s| %s, %s, %s", recu, code, racine, address, port);
 			if (rt < 0 || rt >= STR_SIZE) return -1;
@@ -98,17 +101,19 @@ int msg_builder(char **old, char *recu, char *code, char *line) {
 			strncat(*old, address, STR_SIZE-strlen(*old));
 			strncat(*old, ", ", STR_SIZE-strlen(*old));
 			strncat(*old, port, STR_SIZE-strlen(*old));
+			strncat(*old, "\n", STR_SIZE-strlen(*old));
 		}
 		free(line_cpy);
 	} else {
 		if (*old[0] == '\0') {
-			rt = snprintf(*old, STR_SIZE, "%s |%s|", recu, code);
+			rt = snprintf(*old, STR_SIZE, "%s |%s|\n", recu, code);
 			if (rt < 0 || rt >= STR_SIZE) return -1;
 		} else {
 			if (strlen(*old)+6 > STR_SIZE) return -1;
 			strncat(*old, " |", STR_SIZE-strlen(*old));
 			strncat(*old, code, STR_SIZE-strlen(*old));
 			strncat(*old, "|", STR_SIZE-strlen(*old));
+			strncat(*old, "\n", STR_SIZE-strlen(*old));
 		}
 	}
 	return 0;
@@ -149,8 +154,8 @@ char *racine_extractor(char *buff) {
 
 
 void arg_check(int argc, char *argv[]) {
-	if (argc != 4) {
-		usage("bad number of argument (4)\n\n");
+	if (argc < 4 || argc > 5) {
+		usage("bad number of argument (4 ou 5)\n\n");
 	}
 	int tmp;
 	tmp = atoi(argv[1]);
@@ -167,6 +172,14 @@ void arg_check(int argc, char *argv[]) {
 	tmp = atoi(argv[3]);
 	if (tmp < 1 || tmp > 3) {
 		usage("error argv[3] : not in values {1,2,3}\n\n");
+	}
+	
+	if (argc == 5)
+		delai = atol(argv[4]);
+	else {
+		time_t t;
+		srand((unsigned) time(&t));
+		delai = rand()%20+1;
 	}
 }
 

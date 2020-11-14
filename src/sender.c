@@ -5,12 +5,13 @@
 int choix_serv(FILE *fd, char **buff);
 
 int nb_racines = 0;
+int timeout = 18000;
 
 int main(int argc, char *argv[]) {
 	arg_check(argc, argv);
-	int i;
+	int i, a;
 	size_t n = STR_SIZE;
-	char *buff, *site/*, *serveur*/;
+	char *buff, *parcours, *site/*, *serveur*/;
 	//if ((buff = malloc(STR_SIZE)) == NULL) rerror("malloc buff");
 	if ((site = malloc(STR_SIZE)) == NULL) rerror("malloc buff");
 	FILE *fd, *fe;
@@ -22,23 +23,23 @@ int main(int argc, char *argv[]) {
 		buff = parcours_serv_racine(fd);
 		if (site[0] != '\0' && site[0] != '\n') {
 			i = 0;
-			while (sender(site, buff) != 0) {
-				free (buff);
+			//printf("buff : %s\n", buff);
+			while ((a = sender(site, buff)) != 0) {
 				if (i > nb_racines) {
 					printf ("le site est introuvable\n");
 					break;
 				}
 				
-				buff = parcours_serv_racine(fd);
-				if (buff == NULL) break;
+				parcours = parcours_serv_racine(fd);
+				if (parcours == NULL) break;
 				i++;
 			}
+			free(buff);
 		}
-		if (buff != NULL) free(buff);
-		//a cause du break parfois on a un double free ici sans la condition
 	}
 	if (errno != 0) rerror("read");
 	free(site);
+	free(buff);
 	
 	fclose(fd);
 	fclose(fe);
@@ -53,7 +54,8 @@ int sender(char *site, char *adrs_port) {
 	struct sockaddr_in6 dest, retour;
 	struct timeval time;
 	time.tv_sec = 0;
-	time.tv_usec = 5000;	//d'apres l'horodatage un echange dure moins d'une milli-seconde donc 5 c'est safe mais faut ptet le descendre
+	time.tv_usec = timeout;
+	//j'ai mis un rand qui se balade sur [1,20]
 
 	strcpy(copy, adrs_port);
 	adrs = strtok_r(copy, " | ", &saveptr);
@@ -73,76 +75,120 @@ int sender(char *site, char *adrs_port) {
 	addrlen = sizeof(struct sockaddr_in6);
 	CHECK(inet_pton(AF_INET6, adrs, &dest.sin6_addr));
 	printf("message : %s\n", message);
+	
+	i = 0;
+	do {
 	CHECK(sendto(sockfd, message, strlen(message)+1, 0, (struct sockaddr *) &dest, addrlen));
-	free(message);
 	
 	recvfrom(sockfd, buff, STR_SIZE, 0, (struct sockaddr *) &retour, &addrlen);
+	i++;
+	} while ((errno == EAGAIN || errno == EWOULDBLOCK) && i < 3);
+	
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
+		errno = 0;
+		printf("timeout\n");
 		register_time(buff, adrs_port, 1);
+		free(message);
 		return -1;
 	}
 	printf("reponse : %s\n", buff);
 	
 	for (i = 0; i < (int)strlen(buff); i++) {
-		if (buff[i] == '-' && i < (int)strlen(buff)-1 && buff[i+1] == '1')
+		if (buff[i] == '-' && i < (int)strlen(buff)-1 && buff[i+1] == '1') {
+			register_time(buff, adrs_port, 2);
 			a = 1;
+			free(message);
+			return 1;
+		}
 	}
 	if (a == 0) register_time(buff, adrs_port, 0);
 	
-	rt = 0;
-	while (rt == 0) {
-		rt = suite(sockfd, buff, site, &dest, &retour);
-		if (rt == -1) {
-			register_time(buff, adrs_port, 2);
-			return -1;
-		}
-		else if (rt == 1) printf("Adresse resolue\n");
-		else {
-			char tmp_str[STR_SIZE];
-			snprintf(tmp_str, STR_SIZE, "127.0.0.1 | %d", ntohs(dest.sin6_port));
-			register_time(buff, tmp_str, 0);
-		}
-	}
+	rt = suite(sockfd, buff, site, &dest, &retour);
 	
-	return 0;
-}
-
-int suite(int sockfd, char *buff, char *site, struct sockaddr_in6 *dest, struct sockaddr_in6 *retour) {
-	int i;
-	char copy[STR_SIZE], *message, *adrs, *port, *saveptr, *tmp, *saveptr2;
-	socklen_t addrlen;
-	
-	strcpy(copy, buff);
-	adrs = strtok_r(copy, "|", &saveptr);
-	for (i = 0; i < 3; i++)
-		adrs = strtok_r(NULL, "|", &saveptr);
-	if (strlen(adrs) == 2 && adrs[0] == '-' && adrs[1] == '1') {
-		return -1;
-	}
-	while ((tmp = strtok_r(NULL, "|", &saveptr)) != NULL) {
-		strcpy(copy, tmp);
-		adrs = strtok_r(copy, ", ", &saveptr2);
-		if (strncmp(adrs, site, strlen(adrs)) == 0) return 1;
-		adrs = strtok_r(NULL, ", ", &saveptr2);
-		port = strtok_r(NULL, ", ", &saveptr2);
-		
-		dest->sin6_port = htons(atoi(port));
-		addrlen = sizeof(struct sockaddr_in6);
-		//normallement on ferait la meme chose pour l'addresse mais inutile car on reste en local
-		//dest->sin6_addr = adrs;
-		message = msg_builder(site);
-		printf("message : %s\n", message);
-		CHECK_NOER(sendto(sockfd, message, strlen(message)+1, 0, (struct sockaddr *) dest, addrlen), 1);
+	if (rt == 1) {
+		printf("Adresse resolue\n");
 		free(message);
-		
-		buff[0] = '\0';
-		recvfrom(sockfd, buff, STR_SIZE, 0, (struct sockaddr *) retour, &addrlen);
+		return 0;
+	} else {
+		free(message);
+		return 1;
 	}
-	if (buff[0] == '\0') return -1;
-	printf("reponse : %s\n", buff);
-	return 0;
 }
 
+int suite(int sockfd, char *old_buff, char *site, struct sockaddr_in6 *dest, struct sockaddr_in6 *retour) {
+	if (atteint(old_buff, site) == 0) {
+		return 1;
+	}
+	int ret = 0, i, a = 0;
+	char copy[STR_SIZE], *tmp, *adrs, *port, *saveptr, *message, *buff, adrs_port[STR_SIZE];
+	socklen_t addrlen;
+	if ((buff = malloc(STR_SIZE)) == NULL) rerror("malloc");
+	
+	//aFree = token_master(old_buff, &adrs, &horo, &port, &saveptr);
+	tourniquet_suite(old_buff, 0);
+	while ((tmp = tourniquet_suite(NULL, 0)) != NULL && ret != 1) {
+		//printf("tmp : %s\n", tmp);
+		strcpy(copy, tmp);
+		strtok_r(copy, ", ", &saveptr);	//on balance la racine
+		adrs = strtok_r(NULL, ", ", &saveptr);
+		port = strtok_r(NULL, ", ", &saveptr);
+		snprintf(adrs_port, STR_SIZE, "%s | %s", adrs, port);
+		if (port[strlen(port)-1] == '\n')
+			port[strlen(port)-1] ='\0';
+
+		dest->sin6_port = htons(atoi(port));
+		//dest->sin6_addr = adrs;
+		//normallement on ferait la meme chose pour l'addresse mais inutile car on reste en local
+		addrlen = sizeof(struct sockaddr_in6);
+		
+		if ((message = msg_builder(site)) == NULL) rerror("msg_builder");
+		i = 0;
+		do {
+			CHECK(sendto(sockfd, message, strlen(message)+1, 0, (struct sockaddr *) dest, addrlen));
+			//free(message);
+				
+			recvfrom(sockfd, buff, STR_SIZE, 0, (struct sockaddr *) retour, &addrlen);
+			i++;
+		} while ((errno == EAGAIN || errno == EWOULDBLOCK) && i < 3);
+	
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			errno = 0;
+			printf("timeout\n");
+			register_time(buff, adrs_port, 1);
+			continue;
+		}
+		printf("reponse : %s\n", buff);
+		
+		for (i = 0; i < (int)strlen(buff); i++) {
+			if (buff[i] == '-' && i < (int)strlen(buff)-1 && buff[i+1] == '1') {
+				register_time(buff, adrs_port, 2);
+				a = 1;
+			}
+		}
+		if (a == 1) continue;
+		register_time(buff, adrs_port, 0);
+		free(tmp);
+		ret = suite(sockfd, buff, site, dest, retour);
+	}
+	tourniquet_suite(NULL, 1);
+	free(buff);
+	free(message);
+	return ret;
+}
+
+int atteint(char *buff, char *site) {
+	int i;
+	char copy[STR_SIZE], *lien, *saveptr;
+	strncpy(copy, buff, STR_SIZE);
+	strtok_r(copy, "|", &saveptr);
+	for (i = 0; i < 3; i++) {
+		strtok_r(NULL, "|", &saveptr);
+	}
+	lien = strtok_r(NULL, ", ", &saveptr);
+	if (lien == NULL || strlen(lien) < strlen(site)-1)
+		return 1;
+	return strncmp(lien, site, strlen(lien));
+}
 
 char *parcours_serv_racine(FILE *fd) {
 	size_t n = STR_SIZE;
@@ -180,8 +226,8 @@ char *msg_builder(char *site) {
 
 
 void arg_check(int argc, char *argv[]) {
-	if (argc != 3) {
-		usage("bad number of argument (3)\n\n");
+	if (argc < 3 || argc > 4) {
+		usage("bad number of argument (3 ou 4)\n\n");
 	}
 		
 	struct stat s;	
@@ -205,6 +251,10 @@ void arg_check(int argc, char *argv[]) {
 	fd = fopen("time", "w");
 	fclose(fd);
 	free(str);
+	
+	if (argc == 4) {
+		timeout = atoi(argv[3]);
+	}
 }
 
 

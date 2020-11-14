@@ -51,6 +51,96 @@ char *tourniquet(FILE *fd) {
 	return best_line;
 }
 
+
+char *tourniquet_suite(char *buff, int flush) {
+	static char **str = NULL;
+	static int max = 0, compt = 0;
+	if (buff != NULL) {
+		int i;
+		if (str != NULL) {
+			for (i = 0; i < max; i++)
+				free(str[i]);
+			free(str);
+		}
+		char copy[STR_SIZE], *saveptr, *tmp;
+		strncpy(copy, buff, STR_SIZE);
+		compt = 0;
+		max = 0;
+		
+		strtok_r(copy, "|", &saveptr);
+		for (i = 0; i < 3; i++)
+			strtok_r(NULL, "|", &saveptr);
+		
+		for (i = 0; i < (int)strlen(buff); i++) {
+			if (buff[i] == '|') max++;
+			//if (max < 4) copy[i] = '|';
+		}
+		max-=3;	//il y a deja 4 | de base donc au min on a 1 adresse a visiter
+		if ((str = malloc(sizeof(*str) * max)) == NULL) rerror("malloc");
+		for (i = 0; i < max; i++) {
+			if ((str[i] = malloc(STR_SIZE)) == NULL) rerror("malloc");
+			tmp = strtok_r(NULL, "|", &saveptr);
+			strncpy(str[i], tmp, STR_SIZE);
+		}
+		return NULL;
+	} else if (compt >= max || flush == 1) {
+		int i;
+		if (str != NULL) {
+			for (i = 0; i < max; i++) {
+				if (str[i] != NULL) free(str[i]);
+			}
+		}
+		return NULL;
+	} else {
+		int mini = -1, i;
+		long long int recup, min = -1;
+		char copy[STR_SIZE], *port, *saveptr;
+		for (i = 0; i < max; i++) {
+			if (str[i] != NULL) {
+				strncpy(copy, str[i], STR_SIZE);
+				strtok_r(copy, ", ", &saveptr);
+				strtok_r(NULL, ", ", &saveptr);
+				port = strtok_r(NULL, ", ", &saveptr);
+				recup = recup_temps(port);
+				if (min == -1 || min > recup) {
+					min = recup;
+					mini = i;
+				}
+			}
+		}
+		if (mini == -1) return NULL;
+		char *retour;
+		retour = str[mini];
+		str[mini] = NULL;
+		return retour;
+	}
+}
+
+
+long long int recup_temps(char *port) {
+	FILE *fd;
+	long long int temps = 0;
+	size_t n = STR_SIZE;
+	char *read, *port2, *saveptr, *horo, *aFree;
+	if ((read = malloc(STR_SIZE)) == NULL) rerror("malloc");
+	fd = fopen("time", "r");
+	while (getline(&read, &n, fd) > 0) {
+		aFree = token_master (read, NULL, &horo, &port2, &saveptr);
+		if (strncmp(port, port2, strlen(port)) == 0) {
+			temps = atoll(horo);
+			free(aFree);
+			free(read);
+			fclose(fd);
+			return temps;
+		}
+		free(aFree);
+	}
+	free(read);
+	fclose(fd);
+	return temps;
+}
+
+
 int file_search(FILE *fd, char *port) {
 	size_t n = STR_SIZE;
 //l'adresse ne change pas donc au bout d'un moment ... mais c'est pas plus complique
@@ -93,8 +183,6 @@ int register_time(char *buff, char *serv, int crash) {
 	struct timeval horodatage;
 	FILE *fd;
 	
-	
-	
 	aFree = token_master(buff, NULL, &horo_str, NULL, &saveptr);
 	//sleep(1); utiliser nanosleep a la place
 	CHECK_NOER(gettimeofday(&horodatage, NULL), -1);
@@ -111,9 +199,9 @@ int register_time(char *buff, char *serv, int crash) {
 		//au temps ; on prendra le min a reveiller. Ainsi on l'info sur un timeout a reessayer, un ping court ou long,
 		//ou une erreur serveur et permet de faire tourner les serveur comme un briquet en soiree
 	} else if (crash == 2) {
-		interval += 10000000; //on rajoute 10²ms au elo
+		interval += 100; //on rajoute 10²ms au elo
 	} else {
-		interval += 1000000000;	//on rajoute 100²ms au elo
+		interval += 10000;	//on rajoute 100²ms au elo
 	}
 	free(aFree);
 	aFree = token_master(serv, &adrs, &port, NULL, &saveptr);
