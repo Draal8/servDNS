@@ -1,40 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdnoreturn.h> //compiler en C11
-#include <errno.h>
-#include <string.h>
-
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
-
-#define STR_SIZE 2048
-#define CHECK(op) do { if (op == -1) rerror(#op);} while(0)
-#define CHECK_NOER(op, erno) do { if (op == -1) return(erno);} while(0)
-
-noreturn void rerror(char *str) {
-	if (errno != 0) {
-		perror(str);
-	} else {
-		write(STDERR_FILENO, str, strlen(str));
-		write(STDERR_FILENO, "\n", 1);
-	}
-    exit(EXIT_FAILURE);
-}
-
-int serv_type = 0;
-//0: non renseigné 1: serveur racine
-//2: serveur de nom de rang 1 3: serveur de nom de rang 2
-
-void arg_check(int argc, char *argv[]);
-noreturn void usage(char *str);
-int resolution(char *search_file, char *buff, int sockfd, struct sockaddr_in6 client);
-int msg_builder(char **old, char *recu, char *code, char *line);
-char *racine_extractor(char *buff);
+#include "../head/recver.h"
 
 // ./recver 3500 bddserv1 1
 
@@ -49,11 +13,12 @@ int main(int argc, char *argv[]) {
 	int sockfd;
 	char buff[STR_SIZE];
 	socklen_t addrlen;
-	struct sockaddr_in6 my_addr;
-	struct sockaddr_in6 client;
+	struct sockaddr_in6 my_addr, client;
 	addrlen = sizeof(struct sockaddr_in6);
 	
 	CHECK((sockfd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)));
+	memset(&my_addr, 0, sizeof(my_addr));	//mettre des 0 pour que valgrinou soit content
+	memset(&client, 0, sizeof(client));	//(initialisation incomplete)
 	my_addr.sin6_family = AF_INET6;
 	my_addr.sin6_port = htons(atoi(argv[1]));
 	my_addr.sin6_addr = in6addr_any;
@@ -62,10 +27,10 @@ int main(int argc, char *argv[]) {
 	//CHECK(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)));	//On permet de réutiliser la socket
 	CHECK(bind(sockfd, (struct sockaddr *) &my_addr, addrlen));
 	
-	while(1) {
+	while(1) {	//mettre un timer ou arreter avec un signal
 		memset(buff, '\0',STR_SIZE);
 		CHECK(recvfrom(sockfd, buff, STR_SIZE, 0, (struct sockaddr *) &client, &addrlen));	//ecoutes simulannees ?
-		printf("recu : %s", buff);
+		printf("recu : %s\n", buff);
 		if (resolution(argv[2], buff, sockfd, client) != 0) return 1;
 	}
 	
@@ -73,6 +38,8 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+
+//Fonction qui s'occupe de la resolution de site recu
 int resolution(char *search_file, char *buff, int sockfd, struct sockaddr_in6 client) {
 	char *message, *racine, *line;
 	FILE *fd;
@@ -95,7 +62,7 @@ int resolution(char *search_file, char *buff, int sockfd, struct sockaddr_in6 cl
 	free(line);
 	
 	if (message[0] == '\0') {
-		if (msg_builder(&message, buff, "-1", NULL) == -1) rerror("msg builder");
+		if (msg_builder(&message, buff, "-1|", NULL) == -1) rerror("msg builder");
 	}
 	
 	printf("repondu : %s\n", message);
@@ -106,6 +73,8 @@ int resolution(char *search_file, char *buff, int sockfd, struct sockaddr_in6 cl
 	return 0;
 }
 
+
+//Fonction qui construit le message a envoyer
 int msg_builder(char **old, char *recu, char *code, char *line) {
 	int rt;
 	char *racine, *address, *port, *saveptr, *line_cpy;
@@ -145,6 +114,8 @@ int msg_builder(char **old, char *recu, char *code, char *line) {
 	return 0;
 }
 
+
+//Fonction qui extrait la racine a rechercher dans le fichier repertoriant les adresses
 char *racine_extractor(char *buff) {
 	int i = 0, j = 0, end;
 	char *saveptr, *buff_cpy, *racine, *site;
@@ -176,6 +147,7 @@ char *racine_extractor(char *buff) {
 	return racine;
 }
 
+
 void arg_check(int argc, char *argv[]) {
 	if (argc != 4) {
 		usage("bad number of argument (4)\n\n");
@@ -197,6 +169,7 @@ void arg_check(int argc, char *argv[]) {
 		usage("error argv[3] : not in values {1,2,3}\n\n");
 	}
 }
+
 
 noreturn void usage(char *str) {
 	char str2[] = "./recver port bddserv1 type\nport est le port du serveur\nbddserv1 est un fichier qui contient des lignes (ex: '.fr | 127.0.0.1 | 3501'). Il s'agit des adresses des serveurs de nom inférieurs\ntype correspond a la profondeur du serveur\n";

@@ -1,5 +1,5 @@
 ###### PATHS #######
-HEADPATH = .
+HEADPATH = head
 BINPATH  = .
 OBJPATH	 = obj
 SRCPATH	 = src
@@ -10,21 +10,21 @@ vpath %.o ./obj
 
 ###### COMPIL ######
 CC = gcc
-CPPFLAGS =
-CFLAGS   =
-LDLIBS   =
+CPPFLAGS =-Ihead
+CFLAGS   =-std=gnu11 -pedantic
+LDLIBS   =-lm
 
 DEBUG  = YES
 
 ifeq ($(DEBUG),YES)
 	CPPFLAGS +=
-	CFLAGS   +=-Wall -Wextra -g -pedantic -ansi -std=gnu11
+	CFLAGS   +=-Wall -Wextra -g
 	LDLIBS   +=
 	TEXTE 	 +=" debug"
 
 else
 	CPPFLAGS +=
-	CFLAGS   +=-O2 -pedantic -ansi -std=gnu11
+	CFLAGS   +=-O2 
 	LDLIBS   +=
 	TEXTE 	 +=" release"
 endif
@@ -39,17 +39,18 @@ DIST = $(SRC) $(HEAD) Makefile
 
 ###### TARGETS ######
 all: compile
-	@echo "\nExécutable généré en mode"$(TEXTE)"."
+	@echo "${LCYAN}\nExécutable généré en mode"$(TEXTE)".${NC}"
 	
-compile: $(OBJPATH)/sender.o $(OBJPATH)/recver.o
-	$(CC) $(CPPFLAGS) $(OBJPATH)/sender.o -o sender $(CFLAGS) $(LDLIBS)
-	$(CC) $(CPPFLAGS) $(OBJPATH)/recver.o -o recver $(CFLAGS) $(LDLIBS)
-	@echo "\n----Rule" $@ "----"
+compile: $(OBJ)
+	@echo "${LCYAN}\n\n--------------- Rule" $@ "---------------${NC}"
+	$(CC) $(CPPFLAGS) $(SENDER_OBJS) -o sender $(CFLAGS) $(LDLIBS)
+	$(CC) $(CPPFLAGS) $(RECVER_OBJS) -o recver $(CFLAGS) $(LDLIBS)
+	
 
 $(OBJPATH)/%.o: $(SRCPATH)/%.c | OBJ
+	@echo "${LCYAN}\n\n--------------- Rule" $@ "---------------${NC}"
 	$(CC) $(CPPFLAGS) -o $@ -c $< $(CFLAGS) $(LDLIBS)
-	@echo "\n----Rule" $@ "----"
-
+	
 test:
 	bash tests/batterie.sh tests .
 
@@ -81,4 +82,14 @@ DOC:
 ######## DOC ########
 
 #### DEPENDANCIES ####
-######
+SENDER_OBJS = $(OBJPATH)/sender.o $(OBJPATH)/tourniquet.o $(OBJPATH)/common.o
+RECVER_OBJS = $(OBJPATH)/recver.o $(OBJPATH)/common.o
+sender.o : common.h sender.h tourniquet.h
+recver.o : common.h recver.h
+tourniquet.o : common.h tourniquet.h
+common.o : common.h
+
+###### MISC ######
+LCYAN=\033[1;36m
+NC=\033[0m # No Color
+
