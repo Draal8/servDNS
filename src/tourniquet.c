@@ -1,25 +1,9 @@
 #include "../head/tourniquet.h"
 
-/*int main() {
-	static long int trans_id = 1;
-	unsigned long long int tim;
-	char *msg;
-	struct timeval horodatage;
-	
-	if ((msg = malloc(STR_SIZE)) == NULL) return 1;
-	memset(msg, '\0',STR_SIZE);
-	CHECK_NOER(gettimeofday(&horodatage, NULL), 1);
-	tim = horodatage.tv_sec*1000 + horodatage.tv_usec/1000;
-	
-	snprintf(msg, STR_SIZE, "127.0.0.1 | %llu | 3501", tim);
-	register_time(msg);
-	
-	return 0;
-}*/
-
+//Fonction tourniquet pour sender() du fichier sender.c
 char *tourniquet(FILE *fd) {
 	size_t n = STR_SIZE;
-	unsigned long int tmp, min = ULONG_MAX; // 1 sec de delai c'est enorme
+	unsigned long int tmp, min = ULONG_MAX;
 	char *serveur, *ping, *best_line, *adrs, *port, *saveptr, *aFree;
 	FILE *fe;
 	fe = fopen("time", "r+");
@@ -29,6 +13,7 @@ char *tourniquet(FILE *fd) {
 	if ((best_line = malloc(STR_SIZE)) == NULL)
 		rerror("malloc");
 	
+	//boucle pour trouver (ou non) le serveur dans time
 	while (getline(&serveur, &n, fe) > 0) {
 		aFree = token_master(serveur, &adrs, &ping, &port, &saveptr);
 		tmp = atoll(ping);
@@ -39,7 +24,7 @@ char *tourniquet(FILE *fd) {
 		free(aFree);
 	}
 	fclose(fe);
-	if (min == ULONG_MAX) {
+	if (min == ULONG_MAX) {	//si il a pas été trouvé on renvoit NULL
 		free(best_line);
 		return NULL;
 	}
@@ -48,16 +33,16 @@ char *tourniquet(FILE *fd) {
 	snprintf(best_line, STR_SIZE, "%s | %s", adrs, port);
 	free(serveur);
 	free(aFree);
-	return best_line;
+	return best_line;	//sinon on renvoit "adrs | port"
 }
 
-
+//Fonction tourniquet pour suite() du fichier sender.c
 char *tourniquet_suite(char *buff, int flush) {
-	static char **str = NULL;
+	static char **str = NULL;	//string static inspire de strtok
 	static int max = 0, compt = 0;
-	if (buff != NULL) {
+	if (buff != NULL) {	//initialisation
 		int i;
-		if (str != NULL) {
+		if (str != NULL) {	//seul moyen de free str (static) sans mem leak
 			for (i = 0; i < max; i++)
 				free(str[i]);
 			free(str);
@@ -71,9 +56,9 @@ char *tourniquet_suite(char *buff, int flush) {
 		for (i = 0; i < 3; i++)
 			strtok_r(NULL, "|", &saveptr);
 		
+		//on compte le nombre de serveurs a visiter
 		for (i = 0; i < (int)strlen(buff); i++) {
 			if (buff[i] == '|') max++;
-			//if (max < 4) copy[i] = '|';
 		}
 		max-=3;	//il y a deja 4 | de base donc au min on a 1 adresse a visiter
 		if ((str = malloc(sizeof(*str) * max)) == NULL) rerror("malloc");
@@ -83,7 +68,7 @@ char *tourniquet_suite(char *buff, int flush) {
 			strncpy(str[i], tmp, STR_SIZE);
 		}
 		return NULL;
-	} else if (compt >= max || flush == 1) {
+	} else if (compt >= max || flush == 1) {	//free quand finit
 		int i;
 		if (str != NULL) {
 			for (i = 0; i < max; i++) {
@@ -91,17 +76,18 @@ char *tourniquet_suite(char *buff, int flush) {
 			}
 		}
 		return NULL;
-	} else {
+	} else {	//utilisation classique
 		int mini = -1, i;
 		long long int recup, min = -1;
 		char copy[STR_SIZE], *port, *saveptr;
+		//on determine le serveur avec le ELO le plus bas
 		for (i = 0; i < max; i++) {
 			if (str[i] != NULL) {
 				strncpy(copy, str[i], STR_SIZE);
 				strtok_r(copy, ", ", &saveptr);
 				strtok_r(NULL, ", ", &saveptr);
 				port = strtok_r(NULL, ", ", &saveptr);
-				recup = recup_temps(port);
+				recup = recup_temps(port);	
 				if (min == -1 || min > recup) {
 					min = recup;
 					mini = i;
@@ -116,7 +102,7 @@ char *tourniquet_suite(char *buff, int flush) {
 	}
 }
 
-
+//Fonction qui retrouve le ELO ou non d'un serveur
 long long int recup_temps(char *port) {
 	FILE *fd;
 	long long int temps = 0;
@@ -160,8 +146,9 @@ int file_search(FILE *fd, char *port) {
 	return 1;
 }
 
-//Ecrit en mode append dans le fichier 'time' les temps mis par les serveurs pour repondre
-char *token_master (char *buff, char **adrs, char **horodatage, char **port, char **saveptr) {
+
+char *token_master (char *buff, char **adrs, char **horodatage, char **port,
+char **saveptr) {
 	char *copy;
 	if ((copy = malloc(STR_SIZE)) == NULL) rerror("malloc");
 	strncpy(copy, buff, STR_SIZE);
@@ -174,6 +161,7 @@ char *token_master (char *buff, char **adrs, char **horodatage, char **port, cha
 	return copy;
 }
 
+//Ecrit en mode append dans le fichier 'time' les temps mis par les serveurs pour repondre
 int register_time(char *buff, char *serv, int crash) {
 	if (buff == NULL || serv == NULL) rerror("register_time NULL args");
 	int i = 0;
@@ -184,20 +172,22 @@ int register_time(char *buff, char *serv, int crash) {
 	FILE *fd;
 	
 	aFree = token_master(buff, NULL, &horo_str, NULL, &saveptr);
-	//sleep(1); utiliser nanosleep a la place
 	CHECK_NOER(gettimeofday(&horodatage, NULL), -1);
-	interval = horodatage.tv_sec*1000 + horodatage.tv_usec/1000;
+	interval = horodatage.tv_sec*1000 + horodatage.tv_usec/1000;	//en ms
 	
 	if (crash == 0) {
 		if (horo_str != NULL)
 			interval -= atoll (horo_str);
-		interval = pow(interval, 2);	//peut-etre mettre au carre est un peu fort
-		//on met la difference au carré deja pour regler les problemes de changement de jour
-		//et pour accentuer l'importance du ping dans le choix de serveur et se rapprocher de la realite
+		interval = pow(interval, 2);
+/*peut-etre mettre au carre est un peu fort on met la difference au carré pour
+accentuer l'importance du ping dans le choix de serveur et se rapprocher de
+la realite*/
 		interval += horodatage.tv_sec*1000 + horodatage.tv_usec/1000;
-		//on ne stock pas la difference de temps comme on l'imaginerais mais on lui donne un systeme de elo relatif 
-		//au temps ; on prendra le min a reveiller. Ainsi on l'info sur un timeout a reessayer, un ping court ou long,
-		//ou une erreur serveur et permet de faire tourner les serveur comme un briquet en soiree
+/*on ne stock pas la difference de temps comme on l'imaginerais mais on lui
+donne un systeme de elo relatif au temps ; on prendra le min a reveiller.
+Ainsi on l'info sur un timeout a reessayer, un ping court ou long,
+ou une erreur serveur et permet de faire tourner les serveur
+comme un briquet en soiree*/
 	} else if (crash == 2) {
 		interval += 100; //on rajoute 10²ms au elo
 	} else {
@@ -214,8 +204,10 @@ int register_time(char *buff, char *serv, int crash) {
 	fd = fopen("time", "r+");
 	while (getline(&serveur, &n, fd) > 0) {	//on cherche le serveur
 		aFree2 = token_master(serveur, &adrs2, &horo_str2, &port2, &saveptr2);
-		if (serveur[0] != '\n' && strcmp(adrs2, adrs) == 0 && strncmp(port2, port, strlen(port2)-1) == 0) {
+		if (serveur[0] != '\n' && strcmp(adrs2, adrs) == 0 &&
+		strncmp(port2, port, strlen(port2)-1) == 0) {
 			replace_line(i, to_write);
+			//si il est trouve, remplacer une ligne est une operation speciale
 			free(aFree);
 			free(serveur);
 			free(aFree2);

@@ -18,19 +18,22 @@ int main(int argc, char *argv[]) {
 	addrlen = sizeof(struct sockaddr_in6);
 	
 	CHECK((sockfd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)));
-	memset(&my_addr, 0, sizeof(my_addr));	//mettre des 0 pour que valgrinou soit content
+	memset(&my_addr, 0, sizeof(my_addr));
+	//mettre des 0 pour que valgrinou soit content
+	
 	memset(&client, 0, sizeof(client));	//(initialisation incomplete)
 	my_addr.sin6_family = AF_INET6;
 	my_addr.sin6_port = htons(atoi(argv[1]));
 	my_addr.sin6_addr = in6addr_any;
 	
-	CHECK(setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &(int){0}, sizeof(int)));	//On désactive ipv6 only
-	//CHECK(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)));	//On permet de réutiliser la socket
+	CHECK(setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &(int){0},
+	sizeof(int)));	//On désactive ipv6 only
 	CHECK(bind(sockfd, (struct sockaddr *) &my_addr, addrlen));
 	
 	while(1) {	//mettre un timer ou arreter avec un signal
 		memset(buff, '\0',STR_SIZE);
-		CHECK(recvfrom(sockfd, buff, STR_SIZE, 0, (struct sockaddr *) &client, &addrlen));	//ecoutes simulannees ?
+		CHECK(recvfrom(sockfd, buff, STR_SIZE, 0, (struct sockaddr *) &client,
+		&addrlen));	//ecoutes simulannees ?
 		printf("recu : %s\n", buff);
 		if (resolution(argv[2], buff, sockfd, client) != 0) return 1;
 	}
@@ -55,7 +58,8 @@ int resolution(char *search_file, char *buff, int sockfd, struct sockaddr_in6 cl
 	
 	while (getline(&line, &(size_t){STR_SIZE}, fd) > 0) {
 		if (strncmp(racine, line, strlen(racine)) == 0) {
-			if (msg_builder(&message, buff, "1", line) == -1) rerror("msg builder");	//remplir les args
+			if (msg_builder(&message, buff, "1", line) == -1)
+				rerror("msg builder");	//remplir les args
 		}
 	}
 	fclose(fd);
@@ -63,12 +67,14 @@ int resolution(char *search_file, char *buff, int sockfd, struct sockaddr_in6 cl
 	free(line);
 	
 	if (message[0] == '\0') {
-		if (msg_builder(&message, buff, "-1", NULL) == -1) rerror("msg builder");
+		if (msg_builder(&message, buff, "-1", NULL) == -1)
+			rerror("msg builder");
 	}
 	
 	printf("repondu : %s\n", message);
 	msleep(delai);
-	CHECK_NOER(sendto(sockfd, message, strlen(message)+1, 0, (struct sockaddr *) &client, sizeof(struct sockaddr_in6)), -1);
+	CHECK_NOER(sendto(sockfd, message, strlen(message)+1, 0,
+	(struct sockaddr *) &client, sizeof(struct sockaddr_in6)), -1);
 	
 	free(message);
 	return 0;
@@ -90,10 +96,12 @@ int msg_builder(char **old, char *recu, char *code, char *line) {
 		if (port[strlen(port)-1] == '\n') port[strlen(port)-1] = '\0';
 		
 		if (*old[0] == '\0') {
-			rt = snprintf(*old, STR_SIZE, "%s |%s| %s, %s, %s", recu, code, racine, address, port);
+			rt = snprintf(*old, STR_SIZE, "%s |%s| %s, %s, %s", recu, code,
+			racine, address, port);
 			if (rt < 0 || rt >= STR_SIZE) return -1;
 		} else {
-			if (strlen(*old)+strlen(racine)+strlen(address)+strlen(port)+8 > STR_SIZE) return -1;
+			if (strlen(*old)+strlen(racine)+strlen(address)+strlen(port)+8 > STR_SIZE)
+				return -1;
 			strncat(*old, " | ", STR_SIZE-strlen(*old));
 			strncat(*old, racine, STR_SIZE-strlen(*old));
 			strncat(*old, ", ", STR_SIZE-strlen(*old));
@@ -153,26 +161,12 @@ char *racine_extractor(char *buff, char *line) {
 
 	strncpy (racine, &site[j], STR_SIZE);
 	printf("racine : %s\n", racine);
-	/*
-	
-	if (serv_type < 3) {
-		while (i < end && site[i] != '.') { i++; }
-		i++;
-	}
-	if (serv_type < 2) {
-		while (i < end && site[i] != '.') { i++; }
-	}
-	for (; i < end && site[i] != '\n'; i++) {
-		racine[j] = site[i];
-		j++;
-	}
-	racine[j] = '\0';*/
 	
 	free(buff_cpy);
 	return racine;
 }
 
-
+//check les arguments
 void arg_check(int argc, char *argv[]) {
 	if (argc < 3 || argc > 4) {
 		usage("bad number of argument (3 ou 4)\n\n");
@@ -198,7 +192,7 @@ void arg_check(int argc, char *argv[]) {
 	}
 }
 
-
+//printf comment utiliser le programme
 noreturn void usage(char *str) {
 	char str2[] = "./recver port bddserv1 type [delai]\nport est le port du serveur\nbddserv1 est un fichier qui contient des lignes (ex: '.fr | 127.0.0.1 | 3501'). Il s'agit des adresses des serveurs de nom inférieurs\ntype correspond a la profondeur du serveur\n";
 	write(STDERR_FILENO, str, strlen(str));

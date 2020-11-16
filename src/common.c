@@ -1,5 +1,6 @@
 #include "../head/common.h"
 
+//fonction gloable pour crash en cas d'erreur non récupérable
 noreturn void rerror(char *str) {
 	if (errno != 0) {
 		perror(str);
@@ -10,6 +11,7 @@ noreturn void rerror(char *str) {
     exit(EXIT_FAILURE);
 }
 
+//sleep masi version millisecondes
 int msleep(long int ms) {
 	struct timespec t;
 	t.tv_sec = ms / 1000;
