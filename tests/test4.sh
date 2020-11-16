@@ -18,6 +18,8 @@ TMPS_ER="tmpServErr"
 TEST_CRASH=0
 . "$TESTDIR"/biblio.sh
 
+#Test resolution un seul serveur
+
 $SERV 3500 "$DATA/bddserv1" 1 1> $TMPS_S 2> $TMPS_ER &
 sleep 0.1	#on laisse un peu de temps au serveur pour setup
 PID=$!
