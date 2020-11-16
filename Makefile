@@ -56,6 +56,9 @@ test:
 
 tests: test
 
+CI:
+	@bash tests/test1.sh tests ./sender ./recver > log 2>&1
+
 .PHONY: clean mrproper
 
 clean:

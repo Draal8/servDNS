@@ -35,7 +35,7 @@ $SERV 3507 "$DATA/bddserv12" 1> $TMPS_S 2> $TMPS_ER &
 PID+=($!)
 sleep 0.1	#on laisse un peu de temps au serveur pour setup
 $PROG "$DATA/bddclient" "$DATA/bddsites" 1> $TMPC_S 2> $TMPC_ER
-sleep 0.2	#on laisse un peu de temps au serveur pour resoudre
+sleep 0.4	#on laisse un peu de temps au serveur pour resoudre
 
 for i in ${PID[@]}
 do
