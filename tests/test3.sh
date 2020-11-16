@@ -6,6 +6,8 @@ then
     exit 1
 fi
 
+#Test timeout renvoit une erreur
+
 TESTDIR="$1"
 PROG="$2"
 SERV="$3"
@@ -19,22 +21,28 @@ TEST_CRASH=0
 . "$TESTDIR"/biblio.sh
 
 ERROR_STR="test retour inexistant"
-$SERV 3500 "$DATA/bddserv1" 1 1> $TMPS_S 2> $TMPS_ER &
+$SERV 3500 "$DATA/bddserv1" 1000 1> $TMPS_S 2> $TMPS_ER &
 sleep 0.1	#on laisse un peu de temps au serveur pour setup
 PID=$!
 $PROG "$DATA/bddclient" "$DATA/bddsites" 1> $TMPC_S 2> $TMPC_ER
-sleep 0.1	#on laisse un peu de temps au serveur pour resoudre
+sleep 0.5	#on laisse un peu de temps au serveur pour resoudre
 
 kill $PID
 
-nbResolutions=$( grep -c "Adresse resolue" $TMPC_S )
+nbResolutions=$( grep -c "le site est introuvable" $TMPC_S )
 if [ $nbResolutions -eq 1 ]
 then
 	clean_tmp
 	exit 0
 fi
 
-cat $TMP >> $LOG
+cat $TMPC_S >> $LOG
+echo " " >> $LOG
+cat $TMPC_ER >> $LOG
+echo " " >> $LOG
+cat $TMPS_S >> $LOG
+echo " " >> $LOG
+cat $TMPS_ER >> $LOG
 clean_tmp
 exit $((1-$nbResolutions))
 

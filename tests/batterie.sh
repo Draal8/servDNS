@@ -48,5 +48,10 @@ do
 		RETURN=$(($RETURN+1))
     fi
 done
+
+if [ $RETURN -ne 0 ]
+then
+	cat $LOG
+fi
 exit $RETURN
 

@@ -6,6 +6,8 @@ then
     exit 1
 fi
 
+#Test multiples serveur (dont des serveurs racines) qui se partagent les adresses de maniere exclusive IPV4/IPV6 et elles s'entrelacent
+
 TESTDIR="$1"
 PROG="$2"
 SERV="$3"
@@ -19,7 +21,6 @@ TEST_CRASH=0
 . "$TESTDIR"/biblio.sh
 
 declare -a PID=()
-ERROR_STR="test retour inexistant"
 $SERV 3500 "$DATA/bddserv11" 1> $TMPS_S 2> $TMPS_ER &
 PID+=($!)
 $SERV 3501 "$DATA/bddserv21" 1>> $TMPS_S 2>> $TMPS_ER &

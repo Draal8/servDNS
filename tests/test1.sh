@@ -6,6 +6,8 @@ then
     exit 1
 fi
 
+#Test arguments
+
 TESTDIR="$1"
 PROG="$2"
 SERV="$3"
