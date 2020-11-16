@@ -6,7 +6,6 @@ long int delai;
 
 int main(int argc, char *argv[]) {
 	arg_check(argc, argv);
-	serv_type = atoi(argv[3]);
 
 //
 //	Configure IPV4 & IPV6 listener
@@ -45,15 +44,15 @@ int main(int argc, char *argv[]) {
 int resolution(char *search_file, char *buff, int sockfd, struct sockaddr_in6 client) {
 	char *message, *racine, *line;
 	FILE *fd;
-	
-	racine = racine_extractor(buff);
-	
-	if ((message = malloc(STR_SIZE)) == NULL) return -1;
-	memset(message, '\0',STR_SIZE);
-	
 	if ((fd = fopen(search_file, "r")) == NULL) return -1;
 	if ((line = malloc(STR_SIZE)) == NULL) return -1;
-	memset(line, '\0',STR_SIZE);
+	if ((message = malloc(STR_SIZE)) == NULL) return -1;
+	memset(message, '\0', STR_SIZE);
+	
+	getline(&line, &(size_t){STR_SIZE}, fd);
+	racine = racine_extractor(buff, line);
+	rewind(fd);
+	
 	while (getline(&line, &(size_t){STR_SIZE}, fd) > 0) {
 		if (strncmp(racine, line, strlen(racine)) == 0) {
 			if (msg_builder(&message, buff, "1", line) == -1) rerror("msg builder");	//remplir les args
@@ -121,9 +120,17 @@ int msg_builder(char **old, char *recu, char *code, char *line) {
 
 
 //Fonction qui extrait la racine a rechercher dans le fichier repertoriant les adresses
-char *racine_extractor(char *buff) {
-	int i = 0, j = 0, end;
-	char *saveptr, *buff_cpy, *racine, *site;
+char *racine_extractor(char *buff, char *line) {
+	int i = 0, j = 0, end, stade = 0;
+	char *saveptr, *buff_cpy, *line_cpy, *racine, *site;
+	
+	if ((line_cpy = malloc(STR_SIZE)) == NULL) rerror("malloc");
+	strcpy(line_cpy, line);
+	racine = strtok_r(line_cpy, " | ", &saveptr);
+	
+	for (i = 0; i < (int)strlen(racine); i++) {
+		if (racine[i] == '.' && i != 0) stade++;
+	}
 	
 	if ((racine = malloc(STR_SIZE)) == NULL) rerror("malloc");
 	if ((buff_cpy = malloc(STR_SIZE)) == NULL) rerror("malloc");
@@ -134,6 +141,19 @@ char *racine_extractor(char *buff) {
 	site = strtok_r(NULL, " | ", &saveptr);
 	
 	end = strlen(site);
+	
+	j = end;
+	for (i = 0; i < stade+1; i++) {
+		if (j >= 0) j--;
+		while (j >= 0 && site[j] != '.') {
+			j--;
+		}
+	}
+	if (stade != 0) j++;
+
+	strncpy (racine, &site[j], STR_SIZE);
+	printf("racine : %s\n", racine);
+	/*
 	
 	if (serv_type < 3) {
 		while (i < end && site[i] != '.') { i++; }
@@ -146,7 +166,7 @@ char *racine_extractor(char *buff) {
 		racine[j] = site[i];
 		j++;
 	}
-	racine[j] = '\0';
+	racine[j] = '\0';*/
 	
 	free(buff_cpy);
 	return racine;
@@ -154,8 +174,8 @@ char *racine_extractor(char *buff) {
 
 
 void arg_check(int argc, char *argv[]) {
-	if (argc < 4 || argc > 5) {
-		usage("bad number of argument (4 ou 5)\n\n");
+	if (argc < 3 || argc > 4) {
+		usage("bad number of argument (3 ou 4)\n\n");
 	}
 	int tmp;
 	tmp = atoi(argv[1]);
@@ -169,13 +189,8 @@ void arg_check(int argc, char *argv[]) {
 		usage("error argv[2] : not a regular file\n\n");
 	}
 	
-	tmp = atoi(argv[3]);
-	if (tmp < 1 || tmp > 3) {
-		usage("error argv[3] : not in values {1,2,3}\n\n");
-	}
-	
-	if (argc == 5)
-		delai = atol(argv[4]);
+	if (argc == 4)
+		delai = atol(argv[3]);
 	else {
 		time_t t;
 		srand((unsigned) time(&t));
@@ -185,7 +200,7 @@ void arg_check(int argc, char *argv[]) {
 
 
 noreturn void usage(char *str) {
-	char str2[] = "./recver port bddserv1 type\nport est le port du serveur\nbddserv1 est un fichier qui contient des lignes (ex: '.fr | 127.0.0.1 | 3501'). Il s'agit des adresses des serveurs de nom inférieurs\ntype correspond a la profondeur du serveur\n";
+	char str2[] = "./recver port bddserv1 type [delai]\nport est le port du serveur\nbddserv1 est un fichier qui contient des lignes (ex: '.fr | 127.0.0.1 | 3501'). Il s'agit des adresses des serveurs de nom inférieurs\ntype correspond a la profondeur du serveur\n";
 	write(STDERR_FILENO, str, strlen(str));
 	write(STDERR_FILENO, str2, strlen(str2));
 	exit(EXIT_FAILURE);

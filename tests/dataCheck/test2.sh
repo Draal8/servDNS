@@ -27,14 +27,13 @@ sleep 0.1	#on laisse un peu de temps au serveur pour resoudre
 
 kill $PID
 
-nbResolutions=$( grep -c "le site est introuvable" $TMPC_S )
+nbResolutions=$( grep -c "Adresse resolue" $TMPC_S )
 if [ $nbResolutions -eq 1 ]
 then
 	clean_tmp
 	exit 0
 fi
 
-cat $TMP >> $LOG
 clean_tmp
 exit $((1-$nbResolutions))
 

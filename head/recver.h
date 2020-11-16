@@ -18,7 +18,7 @@ void arg_check(int argc, char *argv[]);
 int resolution(char *search_file, char *buff, int sockfd,
 	struct sockaddr_in6 client);
 int msg_builder(char **old, char *recu, char *code, char *line);
-char *racine_extractor(char *buff);
+char *racine_extractor(char *buff, char *line);
 
 
 int serv_type = 0;

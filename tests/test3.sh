@@ -9,36 +9,32 @@ fi
 TESTDIR="$1"
 PROG="$2"
 SERV="$3"
-TMP_SS="tmp_sortie"
-TMP_SSS="tmpServ_sortie"
-TMP_ER="tmp"
-TMP_SER="tmpServ"
+LOG="log"
+DATA="$TESTDIR/datatest3"
+TMPC_S="tmp_sortie"
+TMPS_S="tmpServ_sortie"
+TMPC_ER="tmpErr"
+TMPS_ER="tmpServErr"
 TEST_CRASH=0
 . "$TESTDIR"/biblio.sh
 
-ERROR_STR="test retour correspondant"
-$SERV 1> $TMP_SSS 2> $TMP_SER &
-sleep 0.1
-$PROG "test.eu" 1> /dev/null 2> $TMP_ER
-$PROG "test.com" 1> /dev/null 2> $TMP_ER
-$PROG "test.fr" 1> /dev/null 2> $TMP_ER
-$PROG "test.net" 1> /dev/null 2> $TMP_ER
-$PROG "test.org" 1> /dev/null 2> $TMP_ER
-sleep 0.1
-kill -INT $!
-if [ ! cmp tests/dataCheck/checkt3 $TMP_SSS ]
+ERROR_STR="test retour inexistant"
+$SERV 3500 "$DATA/bddserv1" 1 1> $TMPS_S 2> $TMPS_ER &
+sleep 0.1	#on laisse un peu de temps au serveur pour setup
+PID=$!
+$PROG "$DATA/bddclient" "$DATA/bddsites" 1> $TMPC_S 2> $TMPC_ER
+sleep 0.1	#on laisse un peu de temps au serveur pour resoudre
+
+kill $PID
+
+nbResolutions=$( grep -c "Adresse resolue" $TMPC_S )
+if [ $nbResolutions -eq 1 ]
 then
-	echo $ERROR_STR
-	TEST_CRASH=$((TEST_CRASH + 1))
-else
-	
-	if [ $(test_rerror $TMP_ER) ]
-	then
-		echo $ERROR_STR
-		TEST_CRASH=$((TEST_CRASH + 1))
-	fi
+	clean_tmp
+	exit 0
 fi
 
-clean_tmp()
-return $TEST_CRASH
+cat $TMP >> $LOG
+clean_tmp
+exit $((1-$nbResolutions))
 

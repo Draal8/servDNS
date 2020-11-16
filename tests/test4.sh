@@ -10,7 +10,7 @@ TESTDIR="$1"
 PROG="$2"
 SERV="$3"
 LOG="log"
-DATA="$TESTDIR/datatest2"
+DATA="$TESTDIR/datatest4"
 TMPC_S="tmp_sortie"
 TMPS_S="tmpServ_sortie"
 TMPC_ER="tmpErr"
@@ -27,7 +27,7 @@ sleep 0.1	#on laisse un peu de temps au serveur pour resoudre
 
 kill $PID
 
-nbResolutions=$( grep -c "le site est introuvable" $TMPC_S )
+nbResolutions=$( grep -c "Adresse resolue" $TMPC_S )
 if [ $nbResolutions -eq 1 ]
 then
 	clean_tmp

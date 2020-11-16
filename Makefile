@@ -54,6 +54,8 @@ $(OBJPATH)/%.o: $(SRCPATH)/%.c | OBJ
 test:
 	bash tests/batterie.sh tests .
 
+tests: test
+
 .PHONY: clean mrproper
 
 clean:

@@ -40,7 +40,7 @@ do
     #'>>' append alors que '>' trunc et & permet de dire que c'est
     #un descripteur de fichier apres '>' seulemement
     #if test le retour du test
-    if sh "$TEST" "$TESTDIR" "$PROG" "$SERV" >> "$LOG" 2>&1
+    if bash "$TEST" "$TESTDIR" "$PROG" "$SERV" >> "$LOG" 2>&1
     then
 		printf "Test $NUMTEST OK\n\n"
     else

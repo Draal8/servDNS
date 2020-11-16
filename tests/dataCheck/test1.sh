@@ -142,7 +142,6 @@ if [ $TEST_CRASH -gt 0 ]
 then
 	echo "nb crash : $TEST_CRASH\n"
 fi
-
 clean_tmp
 exit $TEST_CRASH
 

@@ -206,7 +206,8 @@ char *parcours_serv_racine(FILE *fd) {
 
 
 char *msg_builder(char *site) {
-	static long int trans_id = 1;
+	static long int trans_id = 0;
+	trans_id++;
 	unsigned long long int tim;
 	int rt;
 	char *msg;
@@ -259,7 +260,7 @@ void arg_check(int argc, char *argv[]) {
 
 
 noreturn void usage(char *str) {
-	char str2[] = "./sender bddclient bddsites\n\nbddclient est un fichier qui contient des lignes (ex: '127.0.0.1 | 3500'). Il s'agit de l'adresse (IPV4 ou IPV6) et du numéro de port des serveurs racines\nbddsites est un fichier qui contient des lignes (ex: 'www.unistra.fr'). Il s'agit des noms a résoudre\n";
+	char str2[] = "./sender bddclient bddsites [timeout]\n\nbddclient est un fichier qui contient des lignes (ex: '127.0.0.1 | 3500'). Il s'agit de l'adresse (IPV4 ou IPV6) et du numéro de port des serveurs racines\nbddsites est un fichier qui contient des lignes (ex: 'www.unistra.fr'). Il s'agit des noms a résoudre\n";
 	write(STDERR_FILENO, str, strlen(str));
 	write(STDERR_FILENO, str2, strlen(str2));
 	exit(EXIT_FAILURE);
