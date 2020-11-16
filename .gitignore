@@ -4,7 +4,6 @@ sender
 recver
 log
 tmp*
-bdd*
 time
 .time
 scripteur.sh
